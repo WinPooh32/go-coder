@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 var ErrNotStopDoneReason = errors.New("reason of done is not \"stop\"")
@@ -40,6 +41,21 @@ func (role Role) ToString() (string, error) {
 		return "tool", nil
 	default:
 		return "", fmt.Errorf("unknown role %d", role)
+	}
+}
+
+func RoleFromString(s string) (Role, error) {
+	switch strings.ToLower(s) {
+	case "system":
+		return System, nil
+	case "user":
+		return User, nil
+	case "assistant":
+		return Assistant, nil
+	case "tool":
+		return Tool, nil
+	default:
+		return 0, fmt.Errorf("unknown role %q", s)
 	}
 }
 

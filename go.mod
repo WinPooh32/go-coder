@@ -2,7 +2,10 @@ module github.com/WinPooh32/go-coder
 
 go 1.23.4
 
-require github.com/stretchr/testify v1.10.0
+require (
+	github.com/ollama/ollama v0.5.4
+	github.com/stretchr/testify v1.10.0
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
