@@ -32,6 +32,7 @@ const (
 	String PropertyType = iota
 	Number
 	Integer
+	Boolean
 	Array
 )
 
