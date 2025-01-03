@@ -1,8 +1,16 @@
 package llm
 
+import (
+	"context"
+	"errors"
+	"fmt"
+)
+
+var ErrNotStopDoneReason = errors.New("reason of done is not \"stop\"")
+
 type MessageGenerator interface {
 	// Generate generates the next message of the history.
-	Generate(history []Message, tools []ToolFunction) (Message, error)
+	Generate(ctx context.Context, history []Message, tools []ToolFunction) (Message, error)
 }
 
 type Message struct {
@@ -20,10 +28,25 @@ const (
 	Tool
 )
 
+func (role Role) ToString() (string, error) {
+	switch role {
+	case System:
+		return "system", nil
+	case User:
+		return "user", nil
+	case Assistant:
+		return "assistant", nil
+	case Tool:
+		return "tool", nil
+	default:
+		return "", fmt.Errorf("unknown role %d", role)
+	}
+}
+
 type ToolFunction struct {
 	Name        string
 	Description string
-	Parameters  map[string]PropertyType
+	Parameters  map[string]FunctionProperty
 }
 
 type PropertyType int
@@ -35,6 +58,23 @@ const (
 	Boolean
 	Array
 )
+
+func (prop PropertyType) ToString() (string, error) {
+	switch prop {
+	case String:
+		return "string", nil
+	case Number:
+		return "number", nil
+	case Integer:
+		return "integer", nil
+	case Boolean:
+		return "boolean", nil
+	case Array:
+		return "array", nil
+	default:
+		return "", fmt.Errorf("unknown property type %d", prop)
+	}
+}
 
 type FunctionProperty struct {
 	Type          PropertyType
