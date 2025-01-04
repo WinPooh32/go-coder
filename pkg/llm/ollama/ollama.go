@@ -77,14 +77,18 @@ func (ollm *LLM) Generate(ctx context.Context, history []llm.Message, tools []ll
 	var msg llm.Message
 
 	if err := ollm.client.Chat(ctx, req, func(resp api.ChatResponse) error {
-		if resp.DoneReason != "stop" {
+		if resp.Done && resp.DoneReason != "stop" {
 			return fmt.Errorf("%w: reason %q", llm.ErrNotStopDoneReason, resp.DoneReason)
 		}
 
-		msg, err = convertResponseToMessage(resp.Message)
+		msgChunk, err := convertResponseToMessage(resp.Message)
 		if err != nil {
 			return fmt.Errorf("parse message from response: %w", err)
 		}
+
+		msg.Role = msgChunk.Role
+		msg.Content += msgChunk.Content
+		msg.ToolCalls = append(msg.ToolCalls, msgChunk.ToolCalls...)
 
 		return nil
 	}); err != nil {
