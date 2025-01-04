@@ -16,7 +16,12 @@ type LLM struct {
 	client  *api.Client
 }
 
-func New(serverURL *url.URL, model string, opts ...Option) *LLM {
+func New(serverURL string, model string, opts ...Option) (*LLM, error) {
+	su, err := url.Parse(serverURL)
+	if err != nil {
+		return nil, fmt.Errorf("parse server url: %w", err)
+	}
+
 	var o options
 	for _, opt := range opts {
 		opt(&o)
@@ -32,13 +37,13 @@ func New(serverURL *url.URL, model string, opts ...Option) *LLM {
 		httpClient = http.DefaultClient
 	}
 
-	client := api.NewClient(serverURL, httpClient)
+	client := api.NewClient(su, httpClient)
 
 	return &LLM{
 		model:   model,
 		options: o,
 		client:  client,
-	}
+	}, nil
 }
 
 func (ollm *LLM) Generate(ctx context.Context, history []llm.Message, tools []llm.ToolFunction) (llm.Message, error) {
