@@ -29,6 +29,15 @@ const (
 	Tool
 )
 
+func (role Role) String() string {
+	s, err := role.ToString()
+	if err != nil {
+		return "unknown"
+	}
+
+	return s
+}
+
 func (role Role) ToString() (string, error) {
 	switch role {
 	case System:
