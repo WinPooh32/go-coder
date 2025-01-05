@@ -16,7 +16,7 @@ type LLM struct {
 	client  *api.Client
 }
 
-func New(serverURL string, model string, opts ...Option) (*LLM, error) {
+func NewGenerator(serverURL string, model string, opts ...Option) (*LLM, error) {
 	su, err := url.Parse(serverURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse server url: %w", err)
@@ -96,6 +96,70 @@ func (ollm *LLM) Generate(ctx context.Context, history []llm.Message, tools []ll
 	}
 
 	return msg, nil
+}
+
+type Embedder struct {
+	model   string
+	options options
+	client  *api.Client
+}
+
+func NewEmbedder(serverURL string, model string, opts ...Option) (*Embedder, error) {
+	su, err := url.Parse(serverURL)
+	if err != nil {
+		return nil, fmt.Errorf("parse server url: %w", err)
+	}
+
+	var o options
+	for _, opt := range opts {
+		opt(&o)
+	}
+
+	var httpClient *http.Client
+
+	if o.httpClient != nil {
+		httpClient = o.httpClient
+	}
+
+	if httpClient == nil {
+		httpClient = http.DefaultClient
+	}
+
+	client := api.NewClient(su, httpClient)
+
+	return &Embedder{
+		model:   model,
+		options: o,
+		client:  client,
+	}, nil
+}
+
+func (mbd *Embedder) Embed(ctx context.Context, text string) ([]float32, error) {
+	opts, err := mbd.options.ollamaOptions.AsMapParams()
+	if err != nil {
+		return nil, fmt.Errorf("convert ollamaOptions as map params: %w", err)
+	}
+
+	truncate := false
+
+	req := &api.EmbedRequest{
+		Model:     mbd.model,
+		Input:     text,
+		KeepAlive: mbd.options.keepAlive,
+		Truncate:  &truncate,
+		Options:   opts,
+	}
+
+	resp, err := mbd.client.Embed(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("ollama client: embed text: %w", err)
+	}
+
+	if len(resp.Embeddings) != 1 {
+		return nil, fmt.Errorf("ollama must return embedings lists with length 1, but got %d", len(resp.Embeddings))
+	}
+
+	return resp.Embeddings[0], nil
 }
 
 func convertHistoryToRequest(history []llm.Message) ([]api.Message, error) {

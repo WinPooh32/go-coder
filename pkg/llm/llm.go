@@ -14,6 +14,10 @@ type MessageGenerator interface {
 	Generate(ctx context.Context, history []Message, tools []ToolFunction) (Message, error)
 }
 
+type Embedder interface {
+	Embed(ctx context.Context, text string) ([]float32, error)
+}
+
 type Message struct {
 	Role      Role
 	Content   string
