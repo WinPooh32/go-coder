@@ -48,10 +48,8 @@ func NewTaskTracker(dir string, embed llm.Embedder) (*TaskTracker, error) {
 }
 
 func (t *TaskTracker) Set(ctx context.Context, id string, task tasktracker.Task) error {
-	if task.Done {
-		if err := os.MkdirAll(filepath.Join(t.dir, "done"), os.ModePerm); err != nil {
-			return fmt.Errorf("make done folder: %w", err)
-		}
+	if err := os.MkdirAll(filepath.Join(t.dir, "done"), os.ModePerm); err != nil {
+		return fmt.Errorf("make done folder: %w", err)
 	}
 
 	tsk, err := t.get(id)
@@ -59,18 +57,8 @@ func (t *TaskTracker) Set(ctx context.Context, id string, task tasktracker.Task)
 		return fmt.Errorf("get task: %w", err)
 	}
 
-	if !tsk.done && task.Done != tsk.done {
-		filename := filepath.Join(t.dir, formatBasename(id))
-
-		if err := os.Remove(filename); err != nil && !os.IsNotExist(err) {
-			return fmt.Errorf("remove file %q: %w", filename, err)
-		}
-	} else if tsk.done && task.Done != tsk.done {
-		filename := filepath.Join(t.dir, "done", formatBasename(id))
-
-		if err := os.Remove(filename); err != nil && !os.IsNotExist(err) {
-			return fmt.Errorf("remove file %q: %w", filename, err)
-		}
+	if err := t.removeOldTasks(id, task, tsk); err != nil {
+		return err
 	}
 
 	vec, err := t.embed.Embed(ctx, formatMdText(task))
@@ -88,6 +76,24 @@ func (t *TaskTracker) Set(ctx context.Context, id string, task tasktracker.Task)
 
 	if err := t.writeTaskToFile(id, newTask); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (t *TaskTracker) removeOldTasks(id string, newTask tasktracker.Task, oldTask taskData) error {
+	basename := formatBasename(id)
+
+	var filename string
+
+	if !oldTask.done && newTask.Done != oldTask.done {
+		filename = filepath.Join(t.dir, basename)
+	} else if oldTask.done && newTask.Done != oldTask.done {
+		filename = filepath.Join(t.dir, "done", basename)
+	}
+
+	if err := os.Remove(filename); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("remove file %q: %w", filename, err)
 	}
 
 	return nil
