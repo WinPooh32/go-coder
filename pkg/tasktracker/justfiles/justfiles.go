@@ -36,11 +36,15 @@ type TaskTracker struct {
 	embed llm.Embedder
 }
 
-func NewTaskTracker(dir string, embed llm.Embedder) *TaskTracker {
+func NewTaskTracker(dir string, embed llm.Embedder) (*TaskTracker, error) {
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		return nil, fmt.Errorf("make tasks directory: %w", err)
+	}
+
 	return &TaskTracker{
 		dir:   dir,
 		embed: embed,
-	}
+	}, nil
 }
 
 func (t *TaskTracker) Set(ctx context.Context, id string, task tasktracker.Task) error {
