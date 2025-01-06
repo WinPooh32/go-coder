@@ -142,6 +142,10 @@ linters-settings:
     case:
       rules:
         json: snake
+  cyclop:
+    skip-tests: true
+    max-complexity: 15
+    package-average: 0
 issues:
   exclude-rules:
     - path: '(.+)_test\.go'
