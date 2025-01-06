@@ -139,6 +139,32 @@ func (t *TaskTracker) Get(_ context.Context, id string) (task tasktracker.Task, 
 	}, nil
 }
 
+func (t *TaskTracker) List(_ context.Context, done *bool) ([]tasktracker.Task, error) {
+	showDoneTasks := done != nil && *done
+	showUndoneTasks := done != nil && !*done
+
+	all, err := t.getAll()
+	if err != nil {
+		return nil, fmt.Errorf("get all tasks: %w", err)
+	}
+
+	if len(all) == 0 {
+		return nil, nil
+	}
+
+	tasks := make([]tasktracker.Task, 0, len(all))
+
+	for _, tsk := range all {
+		t := convertToTrackerTask(tsk)
+
+		if (showDoneTasks && t.Done) || (showUndoneTasks && !t.Done) || done == nil {
+			tasks = append(tasks, t)
+		}
+	}
+
+	return slices.Clip(tasks), nil
+}
+
 func (t *TaskTracker) Search(ctx context.Context, query string) ([]tasktracker.SearchResult, error) {
 	vec, err := t.embed.Embed(ctx, query)
 	if err != nil {
@@ -333,4 +359,12 @@ func formatBasename(id string) string {
 
 func formatMdText(task tasktracker.Task) string {
 	return fmt.Sprintf("# %s\n\n%s", task.Title, task.Description)
+}
+
+func convertToTrackerTask(tsk taskData) tasktracker.Task {
+	return tasktracker.Task{
+		Title:       tsk.Title,
+		Description: tsk.Description,
+		Done:        tsk.done,
+	}
 }

@@ -11,6 +11,7 @@ type Tracker interface {
 	Set(ctx context.Context, id string, task Task) error
 	Get(ctx context.Context, id string) (Task, error)
 	Del(ctx context.Context, id string) error
+	List(ctx context.Context, done *bool) ([]Task, error)
 	Search(ctx context.Context, query string) ([]SearchResult, error)
 }
 
