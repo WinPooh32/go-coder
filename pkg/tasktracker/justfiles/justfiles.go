@@ -132,11 +132,7 @@ func (t *TaskTracker) Get(_ context.Context, id string) (task tasktracker.Task, 
 		return task, fmt.Errorf("get task: %w", err)
 	}
 
-	return tasktracker.Task{
-		Title:       tsk.Title,
-		Description: tsk.Description,
-		Done:        tsk.done,
-	}, nil
+	return convertToTrackerTask(tsk), nil
 }
 
 func (t *TaskTracker) List(_ context.Context, done *bool) ([]tasktracker.Task, error) {
@@ -281,11 +277,7 @@ func (t *TaskTracker) rankSearchResults(
 		}
 
 		results[i] = tasktracker.SearchResult{
-			Task: tasktracker.Task{
-				Title:       t.Title,
-				Description: t.Description,
-				Done:        t.done,
-			},
+			Task:  convertToTrackerTask(t),
 			Score: dst,
 		}
 	}
@@ -363,6 +355,7 @@ func formatMdText(task tasktracker.Task) string {
 
 func convertToTrackerTask(tsk taskData) tasktracker.Task {
 	return tasktracker.Task{
+		ID:          tsk.ID,
 		Title:       tsk.Title,
 		Description: tsk.Description,
 		Done:        tsk.done,
