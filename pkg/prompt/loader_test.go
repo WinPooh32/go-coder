@@ -67,8 +67,8 @@ func TestExecute_MissingTemplateField(t *testing.T) {
 
 	_, err = prompt.Execute(map[string]any{})
 	if assert.Error(t, err) {
-		expectedErr := "some template arguments are not provided"
-		assert.Equal(t, expectedErr, err.Error(), "should produce correct error message")
+		expectedErr := "has no entry for key"
+		assert.ErrorContainsf(t, err, expectedErr, "should produce correct error message")
 	}
 }
 

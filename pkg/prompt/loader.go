@@ -1,7 +1,6 @@
 package prompt
 
 import (
-	"errors"
 	"fmt"
 	"io/fs"
 	"path/filepath"
@@ -20,17 +19,11 @@ func (p *Prompt) Name() string {
 func (p *Prompt) Execute(data map[string]any) (string, error) {
 	sb := strings.Builder{}
 
-	if err := p.tpl.Execute(&sb, data); err != nil {
+	if err := p.tpl.Option("missingkey=error").Execute(&sb, data); err != nil {
 		return "", fmt.Errorf("execute template %q: %w", p.tpl.Name(), err)
 	}
 
-	s := sb.String()
-
-	if strings.Contains(s, "<no value>") {
-		return "", errors.New("some template arguments are not provided")
-	}
-
-	return s, nil
+	return sb.String(), nil
 }
 
 func Load(dir fs.FS, patterns ...string) (map[string]Prompt, error) {
