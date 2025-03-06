@@ -1,0 +1,54 @@
+{
+    "type": "json_schema",
+    "json_schema": {
+        "name": "analyze_task",
+        "strict": true,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "thoughts": {
+                    "type": "string",
+                    "description": "Your step by step thoughts about user's query. For completing this well you need to find all objects and describe relations between them."
+                },
+                "feedback": {
+                    "type": "string",
+                    "description": "Detailed feedback of the task."
+                },
+                "subtasks": {
+                    "type": "array",
+                    "description": "List of new subtasks can be solved independently. Together they solve root task. If root task is simple enough, set value as `null`",
+                    "items": {
+                        "type": "object",
+                        "description": "Subtask description.",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "Short summary about subtask."
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Detailed task specification."
+                            }
+                        },
+                        "required": [
+                            "title",
+                            "description"
+                        ],
+                        "additional_properties": false
+                    }
+                },
+                "clarification_needed": {
+                    "type": "boolean",
+                    "description": "Set `true` if task can't be solved without additional clarification. Otherwise set `false`."
+                },
+                "required": [
+                    "thoughts",
+                    "feedback",
+                    "subtasks",
+                    "clarification_needed"
+                ],
+                "additional_properties": false
+            }
+        }
+    }
+}
